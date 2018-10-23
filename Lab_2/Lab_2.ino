@@ -31,11 +31,11 @@ void loop() {
     // read the incoming byte:
     incomingByte = Serial.read();
     if (incomingByte != LINE_FEED) {
-
       if (isFinished) {
         firstNum = 0;
         secondNum = 0;
         isFinished = false;
+        onFirst = true;
         lcd.clear();
       }
       char data = (char)incomingByte;
