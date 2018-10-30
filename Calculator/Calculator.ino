@@ -1,8 +1,7 @@
-#include <LiquidCrystal.h>
+#include <Wire.h>
 
 const int LINE_FEED = 10; // ascii code for line feed
-
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7, 8); // bus 1
+const int SPACE = 32;
 
 int incomingByte = 0;   // for incoming serial data
 
@@ -17,26 +16,24 @@ char operation = 0;
 bool clearScreen = false;
 
 void setup() {
-  lcd.begin(16, 2);
   Serial.begin(9600);     // opens serial port, sets data rate to 9600 bps
-  lcd.display();
+  Wire.begin();
 }
 
 void loop() {
   if (Serial.available() > 0) {
     incomingByte = Serial.read();
-    if (incomingByte != LINE_FEED) {
+    if (incomingByte != LINE_FEED && incomingByte != SPACE) {
       prevData = data;
       data = (char)incomingByte;
       
       if (clearScreen) {
-        lcd.clear();
-        lcd.setCursor(0, 0);
         clearScreen = false;
       }
       
-      lcd.print(data);
-
+      // lcd.print(data);
+      sendData(data);
+      
       if (onFirst) {
         if (prevData == 0 && data == '-') {
           firstNegative = true;
@@ -58,9 +55,6 @@ void loop() {
         }
         
         if (data == '=') {
-          Serial.print(firstNum);
-          Serial.print(" ");
-          Serial.println(secondNum);
           calculate();
           reset();
           clearScreen = true;
@@ -72,8 +66,6 @@ void loop() {
 
 // prints the final result
 void calculate() {
-  lcd.setCursor(0, 1);  // sets the cursor on the second row
-  
   if (firstNegative) {
     firstNum *= -1;
   }
@@ -83,13 +75,17 @@ void calculate() {
   }
 
   if (operation == '+') {
-    lcd.print(firstNum + secondNum);
+    sendDataInt((firstNum + secondNum));
   } else if (operation == '-') {
-    lcd.print(firstNum - secondNum);
+    sendDataInt((firstNum - secondNum));
   } else if (operation == '/') {
-    lcd.print(firstNum / secondNum);
+    if (0 == secondNum) {
+      sendDataInt(9802);  // add some comments
+    } else {
+      sendDataInt((firstNum / secondNum));
+    }
   } else if (operation == '*') {
-    lcd.print(firstNum * secondNum);
+    sendDataInt((firstNum * secondNum));
   }
 }
 
@@ -102,4 +98,23 @@ void reset() {
   secondNum = 0;
   onFirst = true;
   operation = 0;
+}
+
+// send inputs as characters
+void sendData(char data) {
+  Wire.beginTransmission(4);
+  Wire.write(data);
+  Serial.println(data);
+  Wire.endTransmission();
+}
+
+// send answer as two bytes
+void sendDataInt(int dataInt) {
+  byte data[2];
+  data[0] = (dataInt >> 8) & 0xFF;
+  data[1] = dataInt & 0xFF;
+  Serial.println(dataInt);
+  Wire.beginTransmission(4);
+  Wire.write(data, 2);
+  Wire.endTransmission();
 }
