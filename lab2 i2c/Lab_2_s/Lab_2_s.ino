@@ -51,7 +51,13 @@ void receiveEvent(int howMany)
     
     ans = a;
     ans = (ans << 8) | b;
-    lcd.print(ans);
+    if (9802 == ans) {
+      lcd.print("Div by 0 Error");
+    } else if (ans > 9802 || ans < -9801) {
+      lcd.print("Out of range");
+    } else {
+      lcd.print(ans);
+    }
     Serial.println(ans);
     done = true;
   }

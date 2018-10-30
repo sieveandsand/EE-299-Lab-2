@@ -1,12 +1,7 @@
-#include <LiquidCrystal.h>
 #include <Wire.h>
 
 const int LINE_FEED = 10; // ascii code for line feed
 
-
-// initialize the library by associating any needed LCD interface pin
-// with the arduino pin number it is connected to
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7, 8); // bus 1
 
 int incomingByte = 0;   // for incoming serial data
 int firstNum = 0;
